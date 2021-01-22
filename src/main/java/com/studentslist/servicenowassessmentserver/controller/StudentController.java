@@ -1,6 +1,6 @@
 package com.studentslist.servicenowassessmentserver.controller;
 
-import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.studentslist.servicenowassessmentserver.dto.ResponseMessage;
 import com.studentslist.servicenowassessmentserver.dto.TokenDTO;
 import com.studentslist.servicenowassessmentserver.dto.TokenResponseDTO;
 import com.studentslist.servicenowassessmentserver.model.Student;
@@ -12,7 +12,6 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class StudentController {
@@ -48,13 +47,13 @@ public class StudentController {
     }
 
     @DeleteMapping("/students/{id}")
-    public Message deleteStudentById(@PathVariable("id") Long id){
+    public ResponseMessage deleteStudentById(@PathVariable("id") Long id){
         studentService.deleteStudentById(id);
-        return new Message("Deleted: " + id + " successfully", true);
+        return new ResponseMessage("Deleted: " + id + " successfully", true);
     }
 
     @PostMapping("/validate_token")
-    public ResponseEntity<Message> validateCaptchaToken(@RequestBody TokenDTO token, HttpServletRequest request){
+    public ResponseEntity<ResponseMessage> validateCaptchaToken(@RequestBody TokenDTO token, HttpServletRequest request){
         String recaptchaToken = token.getRecaptcha();
         String secretKey = "6Lf7yzcaAAAAACeH7rA11ee9aadIEb30IFeE-HmZ";
 
@@ -63,31 +62,14 @@ public class StudentController {
                 "&remoteip=" + request.getRemoteAddr();
 
         if(recaptchaToken == null){
-            return ResponseEntity.status(201).body(new Message("Token is empty", false));
+            return ResponseEntity.status(201).body(new ResponseMessage("Token is empty", false));
         }
 
         TokenResponseDTO tokenRes = restTemplate.getForObject(url, TokenResponseDTO.class);
         if(!tokenRes.getSuccess()){
-            return ResponseEntity.status(403).body(new Message("Recaptcha failed", false));
+            return ResponseEntity.status(403).body(new ResponseMessage("Recaptcha failed", false));
         }
 
-        return ResponseEntity.ok(new Message("Recaptcha passed", true));
-    }
-
-    class Message{
-        private String message;
-        private boolean success;
-        public Message(String message, boolean success){
-            this.message = message;
-            this.success = success;
-        }
-        public Message() { }
-        public String getMessage(){
-            return message;
-        }
-        public void setMessage(String message){
-            this.message = message;
-        }
-        public boolean getSuccess(){ return success; }
+        return ResponseEntity.ok(new ResponseMessage("Recaptcha passed", true));
     }
 }
